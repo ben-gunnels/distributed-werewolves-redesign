@@ -151,9 +151,9 @@ def assign():
             c.send('~~~~~ YOU ARE A %s ~~~~~'%role, all[player][1])
     else: #moderator chooses roles
         moderatorAssignment = 1
-        print '\nModerator Assignment:'
+        print('\nModerator Assignment:')
         moderatorAssignmentChoices = all.keys()
-        print 'Choose wolves from %s. enter "done" when finished.'%str(sorted(moderatorAssignmentChoices))
+        print('Choose wolves from %s. enter "done" when finished.'%str(sorted(moderatorAssignmentChoices)))
         moderatorAssignmentContinue = 1
         while moderatorAssignmentContinue == 1:
             time.sleep(1)
@@ -163,7 +163,7 @@ def assign():
         moderatorAssignmentChoices = []
         for p in all.keys():
             if p not in wolfList: moderatorAssignmentChoices.append(p)
-        print 'Choose witch from %s.'%str(sorted(moderatorAssignmentChoices))
+        print('Choose witch from %s.'%str(sorted(moderatorAssignmentChoices)))
         moderatorAssignmentContinue = 1
         while moderatorAssignmentContinue == 1:
             if len(moderatorAssignmentList) == 1:
@@ -329,7 +329,7 @@ def standardTurn():
 def listenerThread():
     global round, all, moderatorAssignment, moderatorAssignmentContinue, moderatorAssignmentList, moderatorAssignmentChoices
     while 1:
-        try: i = raw_input().strip('\n')
+        try: i = input().strip('\n')
         except: break
         if i == '':
             pass
@@ -338,20 +338,20 @@ def listenerThread():
                 moderatorAssignmentContinue = 0
             elif i in moderatorAssignmentChoices and i not in moderatorAssignmentList:
                 moderatorAssignmentList.append(i)
-                print 'added %s'%i
+                print('added %s'%i)
             else:
-                print 'invalid.'
+                print('invalid.')
         elif i == 'help':
             #x=s.Popen(['ls','-l'],stdout=s.PIPE).communicate()[0].split('\n')
             os.system('cat moderatorHelp.txt')
         elif i == 'status':
-            print 'round %d'%round
-            print 'all: %s'%str(all.keys())
-            print 'wolves: %s'%str(wolves.keys())
+            print('round %d'%round)
+            print('all: %s'%str(all.keys()))
+            print('wolves: %s'%str(wolves.keys()))
             wStatus = ': '
             wStatus += '%d poisons, '%potions[0]
             wStatus += '%d heals '%potions[1]
-            print 'witch: %s%s'%(str(witch.keys()), wStatus)
+            print('witch: %s%s'%(str(witch.keys()), wStatus))
         elif i[0:4] == 'kill':
             player = i.split(' ')[1]
             c.broadcast('Moderator removed %s'%player, all)
@@ -366,7 +366,7 @@ def listenerThread():
             if audience == 'all': c.broadcast('moderator to all-%s'%i[4:], all)
             elif audience == 'wolves': c.broadcast('moderator to wolves-%s'%i[7:], wolves)
             elif audience == 'witch': c.broadcast('moderator to witch-%s'%i[6:], witch)
-            else: print '***Start your message with "all", "wolves", or "witch". ***'
+            else: print('***Start your message with "all", "wolves", or "witch". ***')
 
         time.sleep(.1)
 

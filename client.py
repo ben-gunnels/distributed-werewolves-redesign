@@ -55,15 +55,9 @@ def send():
     c.send('connect', outPipe)
     while 1:
         try:
-                msg=raw_input()#listen for user input
+                msg=input()#listen for user input
                 c.send(msg, outPipe)
         except: pass
 
-if __name__=='__main__':
-        spoof = raw_input("player to spoof: ")
-        listen(spoof)
-
-
-#wolves are discussing
-        
-# put it on the victim
+if __name__ == "__main__":
+       listen()
