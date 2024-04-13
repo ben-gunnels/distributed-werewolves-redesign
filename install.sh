@@ -1,4 +1,4 @@
-sudo apt install python2
+sudo apt install python3
 sudo adduser moderator
 sudo cp -r ./* /home/moderator
 sudo chmod a+x /home/moderator
