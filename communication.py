@@ -31,6 +31,8 @@ import random
 from threading import Thread
 import select
 
+import asyncio
+
 all = {}
 
 pipeRoot = '/home/moderator/pipes/'
@@ -104,16 +106,18 @@ def handleConnections(timeTillStart, randomize):
             name = 'player%s'%(str(conn))
         #if (conn == 0):
         #   connect(str(conn), str(name))
-        t=Thread(target = connect, args=[str(conn), str(name)])
-        t.setDaemon(True)
-        t.start()
+        asyncio.run(connect, args=[str(conn), str(name)])
+
+        # t=Thread(target = connect, args=[str(conn), str(name)])
+        # t.setDaemon(True)
+        # t.start()
 
     sleep(int(timeTillStart))
     isHandlingConnections = 0
     all = conns
     return conns
 
-def connect(num, name):
+async def connect(num, name):
     #global isHandlingConnections
 
     inPipe = '%stos'%num
@@ -226,6 +230,51 @@ def clear(pipes):
 
 deathspeech = 0
 deadGuy = ""
+    
+def create_epoll(pipes):
+    pipe_nos = {}
+    epoll = select.epoll()
+    for end in pipes:
+        full_path = pipeRoot + "/" + end
+        pipe = os.open(full_path, os.O_RDONLY | os.O_NONBLOCK)
+        epoll.register(pipe, select.EPOLLIN)
+        pipe_nos[pipe] = full_path
+    return epoll, pipe_nos
+
+async def signalHandler():
+    pipes = [f"{pipeRoot}/{i}tosD/{i}tos" for i in range(16)]
+    epoll, pipe_nos = create_epoll(pipes)
+
+    while 1:
+        events = epoll.poll()
+        for file_no, event in events:
+            if file_no in pipe_nos:
+                path = pipe_nos[file_no]
+                pipe = path.split("/")[-1]
+                msg = recv(pipe)
+
+                player = pipe[0]
+
+                if msg == None:
+                    continue
+
+                #if someones giving a deathspeech
+                if deathspeech and player == deadGuy:
+                    broadcast('%s-%s'%(player, msg[2]), modPlayers(player, all))
+
+                #if were voting
+                elif votetime and player in voters.keys():
+                    vote(player, msg[2])
+
+                #if its group chat
+                elif player in allowed:
+                    broadcast('%s-%s'%(player, msg[2]), modPlayers(player, allowed))
+
+                #otherwise prevent spam
+                else:
+                    time.sleep(1)
+
+# Could turn this into a message handler who facilitates the communication between processes.
 def multiRecv(player, players):
     global allowed, voters, targets, deathspeech, deadGuy, all
 
@@ -250,11 +299,12 @@ def multiRecv(player, players):
             time.sleep(1)
 
 def groupChat(players):
-    for player in players.keys():
-        newPlayers = modPlayers(player, players)
-        t=Thread(target = multiRecv, args = [player, newPlayers])
-        t.setDaemon(True)
-        t.start()
+    # for player in players.keys():
+    #     newPlayers = modPlayers(player, players)
+    #     t=Thread(target = multiRecv, args = [player, newPlayers])
+    #     t.setDaemon(True)
+    #     t.start()
+    signalHandler()
 
 #remove one pipe from pipes
 def modPlayers(player, players):

@@ -27,17 +27,20 @@ sys.path.append('/home/moderator/')
 import communication as c
 from threading import Thread
 
+import asyncio
+
 
 uid=pwd.getpwuid(os.getuid())[0].split('r')[1]
 inPipe='sto'+uid
 outPipe=uid+'tos'
 
 
-def listen():
+async def listen():
         isListening=1
-        sendThread = Thread(target=send,args=[])
-        sendThread.setDaemon(True)
-        sendThread.start()
+        # sendThread = Thread(target=send,args=[])
+        # sendThread.setDaemon(True)
+        # sendThread.start()
+        asyncio.create_task(send())
 
         while isListening:
                 try: data=c.recv(inPipe)#receive data from moderator
@@ -46,11 +49,11 @@ def listen():
                         if data[2]=="close":
                                 print("Connection closed.")
                                 isListening=0
-                                sendThread._Thread__stop()
+                                # sendThread._Thread__stop()
                                 exit()
                         else: print(data[2])
                 except Exception as p: pass
-def send():
+async def send():
     outPipe = "tos"
     c.send('connect', outPipe)
     while 1:
@@ -60,4 +63,4 @@ def send():
         except: pass
 
 if __name__ == "__main__":
-       listen()
+       asyncio.run(listen())

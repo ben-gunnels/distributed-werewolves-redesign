@@ -30,6 +30,7 @@ import signal
 import communication as c
 import threading
 from threading import Thread
+import asyncio
 
 i = {}
 inputVars = open('config', 'r').read().split('\n')
@@ -424,9 +425,10 @@ def main():
     assign()
     c.log('roles assigned', 1, 0, 1)
 
-    chatThread=Thread(target = c.groupChat, args = [all, ])
-    chatThread.setDaemon(True)
-    chatThread.start()
+    # chatThread=Thread(target = c.groupChat, args = [all, ])
+    # chatThread.setDaemon(True)
+    # chatThread.start()
+    asyncio.create_task(c.groupChat(all))
     c.log('group chat thread started', 1, 0, 1)
 
     c.log('\nBegin.', 1, 1, 1)
