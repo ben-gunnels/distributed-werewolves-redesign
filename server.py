@@ -114,7 +114,7 @@ def quitGame(Signal, frame):
     global all, winner, gameNumber
     c.broadcast('close', all)
     c.log('\nGAME FORCE QUIT BY MODERATOR', 1, 1, 1)
-    os.chmod(moderatorLogName, 0744)
+    os.chmod(moderatorLogName, 0o744)
     if not test: os.system('echo "Game %d is over.  %s.  Please reconnect your client to play again." | wall'%(gameNumber, winner))
     for t in threading.enumerate():
         try: t._Thread__stop()
@@ -382,7 +382,7 @@ def main():
     if test:
         publicLogName = 'log/dummy.log'
         moderatorLogName = 'log/dummy-m.log'
-        os.chmod(moderatorLogName, 0700)
+        os.chmod(moderatorLogName, 0o700)
         gameNumber = 9999
     else:
         nextround = open('log/nextround', 'r')
@@ -410,8 +410,7 @@ def main():
 
     c.log('GAME: %d'%gameNumber, 1, 1, 1)
 
-    listenThread=Thread(target = listenerThread, args = [])
-    listenThread.setDaemon(True)
+    listenThread=Thread(target = listenerThread, daemon=True, args = [])
     listenThread.start()
     c.log('\nmoderator listener thread started', 1, 0, 1)
 
@@ -425,10 +424,8 @@ def main():
     assign()
     c.log('roles assigned', 1, 0, 1)
 
-    # chatThread=Thread(target = c.groupChat, args = [all, ])
-    # chatThread.setDaemon(True)
-    # chatThread.start()
-    asyncio.create_task(c.groupChat(all))
+    chatThread=Thread(target = c.groupChat, daemon=True, args = [all, ])
+    chatThread.start()
     c.log('group chat thread started', 1, 0, 1)
 
     c.log('\nBegin.', 1, 1, 1)
@@ -459,7 +456,7 @@ def main():
 
 
     c.log('End', 1, 1, 1)
-    if not test: os.chmod('log/%dm.log'%gameNumber, 0744)
+    if not test: os.chmod('log/%dm.log'%gameNumber, 0o744)
     if not test: os.system('echo "Game %d is over.  %s.  Please reconnect your client to play again." | wall'%(gameNumber, winner))
     exit()
 

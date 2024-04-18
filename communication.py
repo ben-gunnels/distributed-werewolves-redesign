@@ -32,6 +32,7 @@ from threading import Thread
 import select
 
 import asyncio
+import queue
 
 all = {}
 
@@ -104,20 +105,19 @@ def handleConnections(timeTillStart, randomize):
         if randomize: name = f[conn]
         else: 
             name = 'player%s'%(str(conn))
-        #if (conn == 0):
-        #   connect(str(conn), str(name))
-        asyncio.run(connect, args=[str(conn), str(name)])
+            
+        if (conn == 0):
+          connect(str(conn), str(name))
 
-        # t=Thread(target = connect, args=[str(conn), str(name)])
-        # t.setDaemon(True)
-        # t.start()
+        t=Thread(target = connect, daemon=True, args=[str(conn), str(name)])
+        t.start()
 
     sleep(int(timeTillStart))
     isHandlingConnections = 0
     all = conns
     return conns
 
-async def connect(num, name):
+def connect(num, name):
     #global isHandlingConnections
 
     inPipe = '%stos'%num
@@ -224,8 +224,7 @@ def log(msg, printBool, publicLogBool, moderatorLogBool):
 def clear(pipes):
     for p in pipes:
         for i in range(10):
-            t=Thread(target = recv, args = [p])
-            t.setDaemon(True)
+            t=Thread(target = recv, daemon=True, args = [p])
             t.start()
 
 deathspeech = 0
@@ -241,9 +240,10 @@ def create_epoll(pipes):
         pipe_nos[pipe] = full_path
     return epoll, pipe_nos
 
-async def signalHandler():
+async def signalHandler(): # Event loop
     pipes = [f"{pipeRoot}/{i}tosD/{i}tos" for i in range(16)]
     epoll, pipe_nos = create_epoll(pipes)
+    q = queue.Queue()
 
     while 1:
         events = epoll.poll()
@@ -255,24 +255,28 @@ async def signalHandler():
 
                 player = pipe[0]
 
-                if msg == None:
-                    continue
+                q.put(msg)
 
-                #if someones giving a deathspeech
-                if deathspeech and player == deadGuy:
-                    broadcast('%s-%s'%(player, msg[2]), modPlayers(player, all))
+        while q:
+            msg = q.get()
+            if msg == None:
+                continue
 
-                #if were voting
-                elif votetime and player in voters.keys():
-                    vote(player, msg[2])
+            #if someones giving a deathspeech
+            if deathspeech and player == deadGuy:
+                broadcast('%s-%s'%(player, msg[2]), modPlayers(player, all))
 
-                #if its group chat
-                elif player in allowed:
-                    broadcast('%s-%s'%(player, msg[2]), modPlayers(player, allowed))
+            #if were voting
+            elif votetime and player in voters.keys():
+                vote(player, msg[2])
 
-                #otherwise prevent spam
-                else:
-                    time.sleep(1)
+            #if its group chat
+            elif player in allowed:
+                broadcast('%s-%s'%(player, msg[2]), modPlayers(player, allowed))
+
+            #otherwise prevent spam
+            else:
+                time.sleep(1)
 
 # Could turn this into a message handler who facilitates the communication between processes.
 def multiRecv(player, players):
