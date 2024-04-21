@@ -30,8 +30,6 @@ import threading
 import random
 from threading import Thread
 import select
-
-import asyncio
 import queue
 
 all = {}
@@ -107,11 +105,10 @@ def handleConnections(timeTillStart, randomize):
             name = 'player%s'%(str(conn))
         #if (conn == 0):
         #   connect(str(conn), str(name))
-        asyncio.run(connect, args=[str(conn), str(name)])
 
-        # t=Thread(target = connect, args=[str(conn), str(name)])
-        # t.setDaemon(True)
-        # t.start()
+        t=Thread(target = connect, args=[str(conn), str(name)])
+        t.setDaemon(True)
+        t.start()
 
     sleep(int(timeTillStart))
     isHandlingConnections = 0
