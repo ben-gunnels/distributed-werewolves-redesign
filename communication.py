@@ -105,12 +105,13 @@ def handleConnections(timeTillStart, randomize):
         if randomize: name = f[conn]
         else: 
             name = 'player%s'%(str(conn))
-            
-        if (conn == 0):
-          connect(str(conn), str(name))
+        #if (conn == 0):
+        #   connect(str(conn), str(name))
+        asyncio.run(connect, args=[str(conn), str(name)])
 
-        t=Thread(target = connect, daemon=True, args=[str(conn), str(name)])
-        t.start()
+        # t=Thread(target = connect, args=[str(conn), str(name)])
+        # t.setDaemon(True)
+        # t.start()
 
     sleep(int(timeTillStart))
     isHandlingConnections = 0
@@ -198,7 +199,7 @@ def recv(pipe):
                 out = pipe.split('to')[0]
                 if (output[i][1] == 's' or output[i][1] == out or imposterMode == 1):
                     return output[i]
-                
+
     except Exception as p:
         log('receive error:%s'%p, 0, 0, 0)
         pass
@@ -224,7 +225,8 @@ def log(msg, printBool, publicLogBool, moderatorLogBool):
 def clear(pipes):
     for p in pipes:
         for i in range(10):
-            t=Thread(target = recv, daemon=True, args = [p])
+            t=Thread(target = recv, args = [p])
+            t.setDaemon(True)
             t.start()
 
 deathspeech = 0
@@ -233,35 +235,39 @@ deadGuy = ""
 def create_epoll(pipes):
     pipe_nos = {}
     epoll = select.epoll()
-    for end in pipes:
-        full_path = pipeRoot + "/" + end
-        pipe = os.open(full_path, os.O_RDONLY | os.O_NONBLOCK)
+    for path in pipes:
+        pipe = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
         epoll.register(pipe, select.EPOLLIN)
-        pipe_nos[pipe] = full_path
+        pipe_nos[pipe] = path
     return epoll, pipe_nos
 
-async def signalHandler(): # Event loop
-    pipes = [f"{pipeRoot}/{i}tosD/{i}tos" for i in range(16)]
-    epoll, pipe_nos = create_epoll(pipes)
-    q = queue.Queue()
+def recvChat(file_no):
+    output = os.read(file_no, 1024)
+    output = output.decode()
+    if output != '':
+        output = output.split('\n')
+        for i in range(len(output)):
+            if len(output[i]):
+                if len(output[i]):
+                    return output[i].split(':')
 
+
+def signalHandler(): # Event loop
+    pipes = [f"{pipeRoot}/{i}tosD/{i}tos" for i in range(16)]
+    q = queue.Queue()
+    epoll, pipe_nos = create_epoll(pipes)
     while 1:
         events = epoll.poll()
         for file_no, event in events:
             if file_no in pipe_nos:
                 path = pipe_nos[file_no]
-                pipe = path.split("/")[-1]
-                msg = recv(pipe)
-
-                player = pipe[0]
-
-                q.put(msg)
-
-        while q:
-            msg = q.get()
+                player = 'player' + path.split("/")[-1][0]
+                msg = recvChat(file_no)
+                q.put([player, msg])
+        while not q.empty():
+            player, msg = q.get()
             if msg == None:
                 continue
-
             #if someones giving a deathspeech
             if deathspeech and player == deadGuy:
                 broadcast('%s-%s'%(player, msg[2]), modPlayers(player, all))
@@ -430,4 +436,6 @@ def spawnDeathSpeech(player, endtime):
 
     deathspeech = 0
     deadGuy = ""
+
+
 

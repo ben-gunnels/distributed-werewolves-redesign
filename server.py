@@ -137,7 +137,7 @@ def assign():
 
     #assign roles and inform players
         for i in range(len(all.keys())):
-            player = all.keys()[i]
+            player = list(all.keys())[i]
 
             if config[i] == 'w':
                 wolves[player] = all[player]
@@ -229,7 +229,7 @@ def standardTurn():
         if len(witch) > 0 and (potions[0] or potions[1]):
             c.broadcast('Witch, open your eyes.', c.complement(witch, all))
             c.log('Witch vote', 0, 1, 0)
-            witchPlayer = witch[witch.keys()[0]]
+            witchPlayer = witch[list(witch.keys())[0]]
 
             if wolfkill:
                 validKills = []
