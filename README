@@ -17,3 +17,18 @@ You should just need to run...
 sudo ./install.sh
 
 ...to get it installed.
+
+Update patch using Asynchronous I/O
+
+Clone this github repo https://github.com/miltiades-the-general/distributed-werewolves-redesign on a linux machine or virtual machine.
+
+To play, run ./install.sh and wait for the game to download. The downloader with be prompted to create a password for the moderator. Ensure that you save this password. 
+
+In order for the game to work, at least 3 players must ssh into the host machine.
+One player must ssh as the moderator using ```$ssh moderator@ip-address```, 
+and two players must ssh using ```$ssh playerX@ip-address```. Valid players range from 1 to 15.
+
+Once all players have ssh'd into the host machine the moderator runs the game ```$python3 server.py```,
+and subsequently the players run ```$python3 client.py```, on their respective machines.
+
+As opposed to the previous version of Werewolves, this version does not use multithreading in the group chat thread and instead relies on a central signalHandler thread to monitor and handle I/O throughout the game. 

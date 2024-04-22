@@ -234,11 +234,11 @@ def create_epoll(pipes):
     epoll = select.epoll()
     for path in pipes:
         pipe = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
-        epoll.register(pipe, select.EPOLLIN)
+        epoll.register(pipe, select.EPOLLIN) # Tell epoll object what file descriptors to observe
         pipe_nos[pipe] = path
     return epoll, pipe_nos
 
-def recvChat(file_no):
+def recvChat(file_no): # Like recv but refactored to work with signalHandler
     output = os.read(file_no, 1024)
     output = output.decode()
     if output != '':
@@ -254,7 +254,7 @@ def signalHandler(): # Event loop
     q = queue.Queue()
     epoll, pipe_nos = create_epoll(pipes)
     while 1:
-        events = epoll.poll()
+        events = epoll.poll() # Get alerted for new I/O
         for file_no, event in events:
             if file_no in pipe_nos:
                 path = pipe_nos[file_no]
