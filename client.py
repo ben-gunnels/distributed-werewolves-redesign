@@ -27,8 +27,6 @@ sys.path.append('/home/moderator/')
 import communication as c
 from threading import Thread
 
-import asyncio
-
 uid=pwd.getpwuid(os.getuid())[0].split('r')[1]
 inPipe='sto'+uid
 outPipe=uid+'tos'
