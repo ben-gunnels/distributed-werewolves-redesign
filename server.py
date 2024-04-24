@@ -415,7 +415,8 @@ def main():
     listenThread.start()
     c.log('\nmoderator listener thread started', 1, 0, 1)
 
-    all = c.handleConnections(timeTillStart, int(i['randomizeNames']))
+    # all = c.handleConnections(timeTillStart, int(i['randomizeNames']))
+    all = c.handleConnectionsUsingEpoll(timeTillStart) # use epoll to handle connections
 
     #ot=Thread(target=c.obscure,args=[])
     #ot.start()
