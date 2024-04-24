@@ -31,6 +31,7 @@ import random
 from threading import Thread
 import select
 import queue
+from datetime import datetime, timedelta
 
 all = {}
 
@@ -114,6 +115,46 @@ def handleConnections(timeTillStart, randomize):
     isHandlingConnections = 0
     all = conns
     return conns
+
+def handleConnectionUsingEpoll(timeTillStart):
+    global isHandlingConnections, all
+    pipes = [f"{pipeRoot}/{i}tosD/{i}tos" for i in range(16)]
+    q = queue.Queue()
+    epoll, pipe_nos = create_epoll(pipes)
+    startTime = datetime.now() + timedelta(seconds=timeTillStart)
+    try:
+        while isHandlingConnections:
+            events = epoll.poll() # Get alerted for new I/O, set wait to 1sec
+            for file_no, event in events:
+                if file_no in pipe_nos:
+                    player = 'player' + pipe_nos[file_no].split("/")[-1][0]
+                    try:
+                        connInput = os.read(file_no, 1024)
+                        connInput = connInput.decode()
+                        connInput = connInput.split(':')[2].strip()
+                    except: connInput = ''
+                    if connInput == 'connect':
+                        q.put([player, connInput])
+            while not q.empty():
+                player, connInput = q.get()
+                inPipe = '%stos'%player[-1]
+                outPipe = 'sto%s'%player[-1]
+                if isHandlingConnections:
+                    log('%s connected'%player, 1, 0, 1)
+                    send('Hello, %s.  You are connected.  Please wait for the game to start.'%player, outPipe)
+                    conns[player] = [inPipe, outPipe]
+                elif not isHandlingConnections:
+                    send('Game already started.  Please wait for next game.', outPipe)
+                    send('close', outPipe)
+            if datetime.now() >= startTime:
+                isHandlingConnections = 0
+    except:
+        pass
+    all = conns
+    close_epoll(pipe_nos, epoll)
+    epoll.close()
+    return conns
+
 
 def connect(num, name):
     #global isHandlingConnections
@@ -233,10 +274,15 @@ def create_epoll(pipes):
     pipe_nos = {}
     epoll = select.epoll()
     for path in pipes:
-        pipe = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+        pipe = os.open(path, os.O_RDONLY | os.O_NONBLOCK) # Pipe should be opened on server end as non-blocking
         epoll.register(pipe, select.EPOLLIN) # Tell epoll object what file descriptors to observe
         pipe_nos[pipe] = path
     return epoll, pipe_nos
+
+def close_epoll(pipe_nos, epoll):
+    for pipe_no in pipe_nos:
+        epoll.unregister(pipe_no)
+
 
 def recvChat(file_no): # Like recv but refactored to work with signalHandler
     output = os.read(file_no, 1024)
@@ -245,20 +291,19 @@ def recvChat(file_no): # Like recv but refactored to work with signalHandler
         output = output.split('\n')
         for i in range(len(output)):
             if len(output[i]):
-                if len(output[i]):
-                    return output[i].split(':')
+                return output[i].split(':')
 
 
 def signalHandler(): # Event loop
     pipes = [f"{pipeRoot}/{i}tosD/{i}tos" for i in range(16)]
+    # pipes += [f"{pipeRoot}/sto{i}D/sto{i}" for i in range(16)]
     q = queue.Queue()
     epoll, pipe_nos = create_epoll(pipes)
     while 1:
-        events = epoll.poll() # Get alerted for new I/O
+        events = epoll.poll(1) # Get alerted for new I/O, set wait to 1sec
         for file_no, event in events:
             if file_no in pipe_nos:
-                path = pipe_nos[file_no]
-                player = 'player' + path.split("/")[-1][0]
+                player = 'player' + pipe_nos[file_no].split("/")[-1][0]
                 msg = recvChat(file_no)
                 q.put([player, msg])
         while not q.empty():
