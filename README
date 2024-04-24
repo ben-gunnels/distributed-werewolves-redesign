@@ -32,3 +32,13 @@ Once all players have ssh'd into the host machine the moderator runs the game ``
 and subsequently the players run ```$python3 client.py```, on their respective machines.
 
 As opposed to the previous version of Werewolves, this version does not use multithreading in the group chat thread and instead relies on a central signalHandler thread to monitor and handle I/O throughout the game. 
+
+
+How is our approach different?
+
+In the previous version of werewolves connections and group chat were handled using multithreading.
+
+![Before](/static/BeforeUseCaseDiagram.png)
+
+In our version, we removed the use of multithreading for handling connections and the group chat.
+![After](/static/AfterUseCaseDiagram.png)
