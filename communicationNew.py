@@ -33,6 +33,8 @@ import queue
 import socket
 import json
 from datetime import datetime, timedelta
+import json
+
 
 all = {}
 
@@ -48,6 +50,9 @@ readVulnerability = 0
 readVulnerability_2 = 0
 imposterMode = 1
 isSilent = 1
+
+hostname = ''
+
 def setVars(passedReadVulnerability, passedReadVulnerability_2,passedImposterMode, publicLogName, moderatorLogName):
     #descriptions of these variables can be seen in the config file
     global readVulnerability, readVulnerability_2, imposterMode, logName, mLogName
@@ -117,7 +122,7 @@ def handleConnections(timeTillStart, randomize):
 def handleConnectionUsingEpoll(timeTillStart):
     global isHandlingConnections, all
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(('localhost', 8888)) #change this port to whatever we need (hostname)
+    server_socket.bind((hostname, 8888)) #change this port to whatever we need (hostname)
     server_socket.listen(16)  # Listen for up to 16 connections
 
     epoll = select.epoll()
@@ -173,7 +178,7 @@ def handleConnectionUsingEpoll(timeTillStart):
 def connect(num, name):
     global isHandlingConnections
 
-    server_address = ('localhost', 8888) #change localhost and port
+    server_address = (hostname, 8888) #change localhost and port
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.settimeout(1) 
 
@@ -234,7 +239,6 @@ def recv(sock):
 
     return None
 
-import json
 
 def log(msg, printBool, publicLogBool, moderatorLogBool, public_sock=None, moderator_sock=None):
     global logName, mLogName

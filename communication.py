@@ -94,36 +94,14 @@ def allow(players):
     allowed = players
 
 isHandlingConnections = 1
-def handleConnections(timeTillStart, randomize):
-    global isHandlingConnections, all
-
-    f = open('names.txt', 'r').read().split('\n')[0: - 1]
-    if randomize: random.shuffle(f)
-
-    for conn in range(0, len(f)):
-        if randomize: name = f[conn]
-        else: 
-            name = 'player%s'%(str(conn))
-        #if (conn == 0):
-        #   connect(str(conn), str(name))
-
-        t=Thread(target = connect, args=[str(conn), str(name)])
-        t.setDaemon(True)
-        t.start()
-
-    sleep(int(timeTillStart))
-    isHandlingConnections = 0
-    all = conns
-    return conns
-
-def handleConnectionUsingEpoll(timeTillStart):
+def handleConnectionsUsingEpoll(timeTillStart):
     global isHandlingConnections, all
     pipes = [f"{pipeRoot}/{i}tosD/{i}tos" for i in range(16)]
     q = queue.Queue()
     epoll, pipe_nos = create_epoll(pipes)
     startTime = datetime.now() + timedelta(seconds=timeTillStart)
     try:
-        while isHandlingConnections:
+        while 1:
             events = epoll.poll() # Get alerted for new I/O, set wait to 1sec
             for file_no, event in events:
                 if file_no in pipe_nos:
@@ -135,9 +113,9 @@ def handleConnectionUsingEpoll(timeTillStart):
                     except: connInput = ''
                     if connInput == 'connect':
                         q.put([player, connInput])
-            while not q.empty():
+            while not q.empty(): # While there are connections to be handled
                 player, connInput = q.get()
-                inPipe = '%stos'%player[-1]
+                inPipe = '%stos'%player[-1] #ie. 1tos
                 outPipe = 'sto%s'%player[-1]
                 if isHandlingConnections:
                     log('%s connected'%player, 1, 0, 1)
