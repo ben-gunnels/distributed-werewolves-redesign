@@ -42,6 +42,7 @@ for var in inputVars:
     except:
         continue
     i[key] = value
+
 logFile = ''
 
 #time parameters
