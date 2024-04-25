@@ -17,7 +17,7 @@ Clone this github repo https://github.com/miltiades-the-general/distributed-were
 To play, run ./install.sh and wait for the game to download. The user will be prompted to create a password for the moderator. Ensure that this password is saved. 
 
 The user may have to change the permissions for install.sh, 
-```$chmod 777 install.sh```
+```$chmod 777 install.sh``` and
 ```$chmod 777 mkusr.sh```
 
 ### Using Tailscale
