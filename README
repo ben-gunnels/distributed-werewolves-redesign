@@ -6,36 +6,38 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 A copy of the license is included in the section entitled "GNU
 Free Documentation License".
 
-Virtual Werewolf Game
-email: werewolves@cs.unm.edu
-website: werewolves.cs.unm.edu
-
-Virtual Werewolves is a Linux based, multiplayer game designed to teach Cybersecurity. Players must exploit inference channels in the Linux kernel to identify other's identities and conceal their own.
-
-You should just need to run...
-
-sudo ./install.sh
-
-...to get it installed.
+2024 Benjamin Gunnels, 
 
 ## Update patch using Asynchronous I/O
 
 Feel free to reuse or redistribute this code in any way. 
 
-Clone this github repo https://github.com/miltiades-the-general/distributed-werewolves-redesign on a linux machine or virtual machine.
+Clone this github repo https://github.com/miltiades-the-general/distributed-werewolves-redesign on a linux machine or virtual machine if it hasn't already been downloaded.
 
 To play, run ./install.sh and wait for the game to download. The user will be prompted to create a password for the moderator. Ensure that this password is saved. 
 
-In order for the game to work, at least 3 players must SSH into the host machine. Create an SSH server on the hosts machine using OpenSSH, Tailscale, etc.
-One player must ssh as the moderator using ```$ssh moderator@ip-address```, 
-and two players must ssh using ```$ssh playerX@ip-address```. Valid players range from 1 to 15.
+### Using Tailscale
+If you would like to use tailscale to serve the game follow the brief tutorial.
+On Linux, for each virtual machine run:
+```curl -fsSL https://tailscale.com/install.sh | sh```
 
-Once all players, and one moderator, have ssh'd into the host machine, the moderator runs the game via: ```$python3 server.py```
+The user will be prompted to log in using an email. Next enter:
+```sudo tailscale up --ssh```
+
+The user dashboard can verify that SSH has been enabled.
+![Tailscale](/static/Tailscale.png)
+
+
+### Gameplay
+In order for the game to work, at least 3 parties must SSH into the host machine. Create an SSH server on the host's machine using OpenSSH, Tailscale, etc. Then, one player must SSH as the moderator using ```$ssh moderator@ip-address```, 
+and two players must SSH using ```$ssh playerX@ip-address```. Valid players range from 1 to 15.
+
+Once all players, and one moderator, have SSH'd into the host machine, the moderator runs the game via: ```$python3 server.py```
 and subsequently the players run: ```$python3 client.py``` on their respective machines.
 
 
 ## How is our approach different?
-As opposed to the original version of Werewolves, this version does not use multithreading in the group chat thread, or connection thread, and instead relies on a central signalHandler thread to monitor and handle I/O throughout the game. 
+As opposed to the original version of Werewolves, this version does not use multithreading in the group chat thread, or connection thread, and instead relies on a central signalHandler thread to monitor and handle I/O throughout the game. This reduces the threadspace of the game considerably from n players to just one thread running on the server. Additionally the game has been updated to be compatible with python version 3.0+. 
 
 ![Before](/static/BeforeUseCaseDiagram.png)
 
@@ -50,4 +52,12 @@ while 1:
     events = epoll.poll(1) # Get alerted for new I/O, set wait to 1sec
 ```   
 
-The client operates the same way in our version of the game. Namely, each client runs a thread to monitor I/O on its incoming pipe and writes to its outgoing pipe when there is input to the command line. 
+The client operates the same way in our version of the game. Namely, each client runs a thread to monitor I/O on its incoming pipe and writes to its outgoing pipe when there is input to the command line. This could be refactored to utilize asynchronous programming and this may be a worthwhile endeavor in future versions. 
+
+New Functions Added:
+signalHandler() -> replaced multiRecv()
+create_epoll()
+close_epoll()
+recvChat() -> replaced recv() for the groupchat
+connectUsingEpoll() -> replaced handleConnections() and connect()
+recvConnection() -> replaced connect()

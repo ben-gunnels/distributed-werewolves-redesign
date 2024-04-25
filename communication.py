@@ -107,9 +107,7 @@ def handleConnectionsUsingEpoll(timeTillStart):
                 if file_no in pipe_nos:
                     player = 'player' + pipe_nos[file_no].split("/")[-1][0]
                     try:
-                        connInput = os.read(file_no, 1024)
-                        connInput = connInput.decode()
-                        connInput = connInput.split(':')[2].strip()
+                        connInput = recvConnection(file_no)
                     except: connInput = ''
                     if connInput == 'connect':
                         q.put([player, connInput])
@@ -127,39 +125,18 @@ def handleConnectionsUsingEpoll(timeTillStart):
             if datetime.now() >= startTime:
                 isHandlingConnections = 0
                 all = conns
-                # close_epoll(pipe_nos, epoll)
-                # epoll.close()
+                close_epoll(pipe_nos, epoll)
+                epoll.close()
                 return conns
-    except:
+    except Exception as e:
+        log('connection error: %s'%e)
         pass
-
-
-def connect(num, name):
-    #global isHandlingConnections
-
-    inPipe = '%stos'%num
-    outPipe = 'sto%s'%num
-    duration = .1
-
-    connected = False
-    connInput = ''
-    try:
-        while not connected:#connInput!='connect':
-            try: connInput = recv(inPipe)[2]
-            except Exception as p: pass
-
-            if connInput == 'connect' and isHandlingConnections:
-                log('%s connected'%name, 1, 0, 1)
-                send('Hello, %s.  You are connected.  Please wait for the game to start.'%name, outPipe)
-                conns[name] = [inPipe, outPipe]
-                connected = True
-            elif not isHandlingConnections:
-                duration = 1
-                send('Game already started.  Please wait for next game.', outPipe)
-                send('close', outPipe)
-            time.sleep(duration)
-    except:
-        pass
+    
+def recvConnection(file_no):
+    connInput = os.read(file_no, 1024)
+    connInput = connInput.decode()
+    connInput = connInput.split(':')[2].strip()
+    return connInput
 
 
 def broadcast(msg, players):
@@ -198,29 +175,6 @@ def send(msg, pipe):
         pass
     #log('send error:%s'%p,1,0,1)
 
-def recv(pipe):
-    global readVulnerability, imposterMode
-    try:
-        if readVulnerability == 0:
-            f = open('%s%sD/%s'%(pipeRoot, pipe, pipe), 'r')
-        else:
-            msg = '(cat %s%sD/%s)2>/dev/null'%(pipeRoot, pipe, pipe)
-            f = os.popen(msg)
-        output = f.read().split('\n')
-        f.close()
-
-        for i in range(len(output)):
-            if len(output[i]) > 0:
-                output[i] = output[i].split(':')
-                out = pipe.split('to')[0]
-                if (output[i][1] == 's' or output[i][1] == out or imposterMode == 1):
-                    return output[i]
-
-    except Exception as p:
-        log('receive error:%s'%p, 0, 0, 0)
-        pass
-
-
 #print, publicLog, modLog
 def log(msg, printBool, publicLogBool, moderatorLogBool):
     global logName, mLogName
@@ -237,13 +191,6 @@ def log(msg, printBool, publicLogBool, moderatorLogBool):
         g = open(mLogName, 'a')
         g.write(msg)
         g.close()
-
-def clear(pipes):
-    for p in pipes:
-        for i in range(10):
-            t=Thread(target = recv, args = [p])
-            t.setDaemon(True)
-            t.start()
 
 deathspeech = 0
 deadGuy = ""

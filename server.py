@@ -426,7 +426,7 @@ def main():
     assign()
     c.log('roles assigned', 1, 0, 1)
 
-    chatThread=Thread(target = c.groupChat, daemon=True, args = [all, ])
+    chatThread=Thread(target = c.groupChat, daemon=True, args = [])
     chatThread.start()
     c.log('group chat thread started', 1, 0, 1)
 
