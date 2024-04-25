@@ -61,10 +61,16 @@ while 1:
 
 The client operates the same way in our version of the game. Namely, each client runs a thread to monitor I/O on its incoming pipe and writes to its outgoing pipe when there is input to the command line. This could be refactored to utilize asynchronous programming and this may be a worthwhile endeavor in future versions. 
 
-New Functions Added:
+## New Functions Added:
+
 signalHandler() -> replaced multiRecv()
+
 create_epoll()
+
 close_epoll()
+
 recvChat() -> replaced recv() for the groupchat
+
 connectUsingEpoll() -> replaced handleConnections() and connect()
+
 recvConnection() -> replaced connect()
