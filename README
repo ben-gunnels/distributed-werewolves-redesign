@@ -16,6 +16,10 @@ Clone this github repo https://github.com/miltiades-the-general/distributed-were
 
 To play, run ./install.sh and wait for the game to download. The user will be prompted to create a password for the moderator. Ensure that this password is saved. 
 
+The user may have to change the permissions for install.sh, 
+```$chmod 777 install.sh```
+```$chmod 777 mkusr.sh```
+
 ### Using Tailscale
 If you would like to use tailscale to serve the game follow the brief tutorial.
 On Linux, for each virtual machine run:
@@ -29,8 +33,11 @@ The user dashboard can verify that SSH has been enabled.
 
 
 ### Gameplay
-In order for the game to work, at least 3 parties must SSH into the host machine. Create an SSH server on the host's machine using OpenSSH, Tailscale, etc. Then, one player must SSH as the moderator using ```$ssh moderator@ip-address```, 
+In order for the game to work, at least 3 parties must SSH into the host machine. For best use on a small group set wolfChoose to 1 in the configuration file of the game. This allows the moderator to manually select a werewolf and a witch so that the game can be run for demo purposes. 
+
+Create an SSH server on the host's machine using OpenSSH, Tailscale, etc. Then, one player must SSH as the moderator using ```$ssh moderator@ip-address```, 
 and two players must SSH using ```$ssh playerX@ip-address```. Valid players range from 1 to 15.
+
 
 Once all players, and one moderator, have SSH'd into the host machine, the moderator runs the game via: ```$python3 server.py```
 and subsequently the players run: ```$python3 client.py``` on their respective machines.

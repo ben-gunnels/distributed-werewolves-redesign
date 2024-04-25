@@ -35,10 +35,12 @@ def listen():
         isListening=1
         sendThread = Thread(target=send, daemon=True, args=[])
         sendThread.start()
+        print('connecting...')
 
         while isListening:
                 try: data=c.recv(inPipe)#receive data from moderator
-                except:continue
+                except:
+                    continue
                 try:#process received data
                         if data[2]=="close":
                                 print("Connection closed.")
@@ -57,3 +59,4 @@ def send():
 
 if __name__ == "__main__":
        listen()
+

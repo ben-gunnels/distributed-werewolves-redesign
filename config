@@ -30,7 +30,7 @@ numWolves=2
 #them to be wolves to keep the game interesting for others. Note, <numWolves>
 #plays no role if this is enabled.  1: wolfChoose is enabled; 0: wolfChoose is
 #disabled. 
-wolfChoose=0
+wolfChoose=1
 
 #allow death speechs.  1: players will give a speech upon dying; 0: will not give speech
 deathSpeech=1

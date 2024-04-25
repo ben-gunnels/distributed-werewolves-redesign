@@ -175,6 +175,27 @@ def send(msg, pipe):
         pass
     #log('send error:%s'%p,1,0,1)
 
+def recv(pipe):
+    global readVulnerability, imposterMode
+    try:
+        if readVulnerability == 0:
+            f = open('%s%sD/%s'%(pipeRoot, pipe, pipe), 'r')
+        else:
+            msg = '(cat %s%sD/%s)2>/dev/null'%(pipeRoot, pipe, pipe)
+            f = os.popen(msg)
+        output = f.read().split('\n')
+        f.close()
+
+        for i in range(len(output)):
+            if len(output[i]) > 0:
+                output[i] = output[i].split(':')
+                out = pipe.split('to')[0]
+                if (output[i][1] == 's' or output[i][1] == out or imposterMode == 1):
+                    return output[i]
+    except Exception as p:
+        log('receive error:%s'%p, 0, 0, 0)
+        pass
+
 #print, publicLog, modLog
 def log(msg, printBool, publicLogBool, moderatorLogBool):
     global logName, mLogName
