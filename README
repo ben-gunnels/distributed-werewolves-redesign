@@ -18,27 +18,36 @@ sudo ./install.sh
 
 ...to get it installed.
 
-Update patch using Asynchronous I/O
+## Update patch using Asynchronous I/O
+
+Feel free to reuse or redistribute this code in any way. 
 
 Clone this github repo https://github.com/miltiades-the-general/distributed-werewolves-redesign on a linux machine or virtual machine.
 
-To play, run ./install.sh and wait for the game to download. The downloader with be prompted to create a password for the moderator. Ensure that you save this password. 
+To play, run ./install.sh and wait for the game to download. The user will be prompted to create a password for the moderator. Ensure that this password is saved. 
 
-In order for the game to work, at least 3 players must ssh into the host machine.
+In order for the game to work, at least 3 players must SSH into the host machine. Create an SSH server on the hosts machine using OpenSSH, Tailscale, etc.
 One player must ssh as the moderator using ```$ssh moderator@ip-address```, 
 and two players must ssh using ```$ssh playerX@ip-address```. Valid players range from 1 to 15.
 
-Once all players have ssh'd into the host machine the moderator runs the game ```$python3 server.py```,
-and subsequently the players run ```$python3 client.py```, on their respective machines.
-
-As opposed to the previous version of Werewolves, this version does not use multithreading in the group chat thread and instead relies on a central signalHandler thread to monitor and handle I/O throughout the game. 
+Once all players, and one moderator, have ssh'd into the host machine, the moderator runs the game via: ```$python3 server.py```
+and subsequently the players run: ```$python3 client.py``` on their respective machines.
 
 
-How is our approach different?
-
-In the previous version of werewolves connections and group chat were handled using multithreading.
+## How is our approach different?
+As opposed to the original version of Werewolves, this version does not use multithreading in the group chat thread, or connection thread, and instead relies on a central signalHandler thread to monitor and handle I/O throughout the game. 
 
 ![Before](/static/BeforeUseCaseDiagram.png)
 
 In our version, we removed the use of multithreading for handling connections and the group chat.
 ![After](/static/AfterUseCaseDiagram.png)
+
+The groupchat runs as a single thread using a while loop to monitor I/O using epoll. 
+Epoll is being used in level triggered mode allowing the handler to update the queue when new I/O events are available to be handled. 
+
+```
+while 1:
+    events = epoll.poll(1) # Get alerted for new I/O, set wait to 1sec
+```   
+
+The client operates the same way in our version of the game. Namely, each client runs a thread to monitor I/O on its incoming pipe and writes to its outgoing pipe when there is input to the command line. 

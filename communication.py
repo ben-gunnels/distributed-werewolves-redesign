@@ -126,12 +126,12 @@ def handleConnectionsUsingEpoll(timeTillStart):
                     send('close', outPipe)
             if datetime.now() >= startTime:
                 isHandlingConnections = 0
+                all = conns
+                # close_epoll(pipe_nos, epoll)
+                # epoll.close()
+                return conns
     except:
         pass
-    all = conns
-    close_epoll(pipe_nos, epoll)
-    epoll.close()
-    return conns
 
 
 def connect(num, name):
@@ -304,36 +304,7 @@ def signalHandler(): # Event loop
             else:
                 time.sleep(1)
 
-# Could turn this into a message handler who facilitates the communication between processes.
-def multiRecv(player, players):
-    global allowed, voters, targets, deathspeech, deadGuy, all
-
-    while 1:
-        msg = recv(all[player][0])
-        if msg == None: continue
-
-        #if someones giving a deathspeech
-        if deathspeech and player == deadGuy:
-            broadcast('%s-%s'%(player, msg[2]), modPlayers(player, all))
-
-        #if were voting
-        elif votetime and player in voters.keys():
-            vote(player, msg[2])
-
-        #if its group chat
-        elif player in allowed:
-            broadcast('%s-%s'%(player, msg[2]), modPlayers(player, allowed))
-
-        #otherwise prevent spam
-        else:
-            time.sleep(1)
-
-def groupChat(players):
-    # for player in players.keys():
-    #     newPlayers = modPlayers(player, players)
-    #     t=Thread(target = multiRecv, args = [player, newPlayers])
-    #     t.setDaemon(True)
-    #     t.start()
+def groupChat():
     signalHandler()
 
 #remove one pipe from pipes
