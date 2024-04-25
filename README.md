@@ -6,7 +6,7 @@ with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
 A copy of the license is included in the section entitled "GNU
 Free Documentation License".
 
-2024 Benjamin Gunnels, 
+2024 Benjamin Gunnels, Vignesh R S, Vedant Yatin Pimpley
 
 ## Update patch using Asynchronous I/O
 
